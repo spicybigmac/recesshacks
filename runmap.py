@@ -9,7 +9,7 @@ hands = mphands.Hands(max_num_hands=2)
 print("done loading ai")
 
 # webcam stuff
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 if not cap.isOpened():
     print("bad")
     exit()
@@ -43,7 +43,6 @@ def getnextturn():
         currturn.append(f[line])
         line += 1
 getnextturn()
-
 
 while True:
     success, frame = cap.read()
@@ -81,7 +80,6 @@ while True:
             cx, cy = int(x * w), int(y * h)
             cv2.putText(frame, str(int(num)), (cx + 5, cy + 5), cv2.FONT_HERSHEY_SIMPLEX, 1, textcolor, 1, cv2.LINE_AA)
         
-
         cv2.imshow(windowname, frame)
 
         key = cv2.waitKey(1) & 0xFF
