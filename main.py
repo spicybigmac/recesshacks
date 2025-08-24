@@ -172,9 +172,6 @@ while running:
 
             y += ystep
 
-        if keys[pygame.K_ESCAPE]:
-            SCENE = "menu"
-
     elif SCENE == "mapcreator":
         if currframes == 0:
             if results.multi_hand_landmarks:
@@ -196,10 +193,6 @@ while running:
         surf = pygame.image.frombuffer(frame.tostring(), frame.shape[1::-1],"BGR")
         
         screen.blit(surf,(WIDTH/2-surf.get_width()/2,0))
-
-        if keys[pygame.K_ESCAPE]:
-            file.close()
-            SCENE = "menu"
 
     elif SCENE == "map":
         instruction, requirements = MAPS[curmap][currturn]
@@ -241,7 +234,16 @@ while running:
         
         screen.blit(surf,(WIDTH/2-surf.get_width()/2,0))
 
-        if keys[pygame.K_ESCAPE]:
+    if SCENE != "menu":
+        play = fonts[30].render("Back", 1, palette[4])
+        rect = screen.blit(play,(WIDTH-play.get_width()-50,HEIGHT-play.get_height()-20))
+        rect = (rect[0]+rect[2]/2-100,rect[1]+rect[3]/2-40,200,80)
+        pygame.draw.rect(screen,palette[4],rect,10)
+
+        if fingertips and all(ihateyou(cx,cy,rect) for cx,cy in fingertips):
+            if SCENE == "mapcreator":
+                file.close()
+
             SCENE = "menu"
 
     if results.multi_hand_landmarks:
