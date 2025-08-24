@@ -204,7 +204,7 @@ while running:
                     else:
                         pygame.draw.lines(screen,(0,0,127),1,[(ax,ay),(bx,by),(cx,cy)],2)
                         
-        title = fonts[50].render("NAME OF OUR PRODUCT!!!", 1, palette[4])
+        title = fonts[100].render("Helping Hand", 1, palette[4])
         screen.blit(title,(WIDTH/2-title.get_width()/2,50))
 
         play = fonts[50].render("Play", 1, palette[4])
