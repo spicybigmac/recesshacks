@@ -1,5 +1,6 @@
 import cv2
 import mediapipe as mp
+import sys
 
 # ai init
 mphands = mp.solutions.hands
@@ -9,7 +10,10 @@ hands = mphands.Hands(max_num_hands=2)
 print("done loading ai")
 
 # webcam stuff
-cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+if (sys.platform == "darwin" or sys.platform == "linux"):
+    cap = cv2.VideoCapture(0)
+elif (sys.platform == "win32"):
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 if not cap.isOpened():
     print("bad")
     exit()
@@ -27,22 +31,12 @@ handcolors = [
 ]
 pointcolor = (0,255,0)
 textcolor = (0,0,0)
-distance = 0.05
+frames = 20
+currframes = frames
 
 # LOADING MAP
-mapname = "test"
-
-f = [list(map(float, x.split())) for x in open(f"maps/{mapname}.txt", "r").read().split("\n")]
-currturn = []
-line = 0
-
-def getnextturn():
-    global line, currturn
-    currturn = []
-    while line < len(f) and f[line] != [-1]:
-        currturn.append(f[line])
-        line += 1
-getnextturn()
+mapname = "aaaa"
+f = open(f"maps/{mapname}.sys", "w")
 
 while True:
     success, frame = cap.read()
@@ -53,9 +47,10 @@ while True:
         rgbframe = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         results = hands.process(rgbframe)
 
-        if results.multi_hand_landmarks:
+        if (currframes == 0):
+            f.write("-\n")
 
-            fulfilled = 0
+        if results.multi_hand_landmarks:
             for i,keypoints in enumerate(results.multi_hand_landmarks):
                 mpdrawing.draw_landmarks(frame, keypoints, mphands.HAND_CONNECTIONS,
                                          mpdrawing.DrawingSpec(color=handcolors[i][0], thickness=1, circle_radius=5),
@@ -64,22 +59,16 @@ while True:
                     cx, cy = int(landmark.x * w), int(landmark.y * h)
                     cv2.putText(frame, str(i), (cx + 5, cy + 5), cv2.FONT_HERSHEY_SIMPLEX, 1, textcolor, 1, cv2.LINE_AA)
                 
-                for a,xpos,ypos in currturn:
-                    a = int(a)
-                    if (abs(keypoints.landmark[a].x-xpos) <= distance and abs(keypoints.landmark[a].y-ypos) <= distance):
-                        fulfilled += 1
-            
-            if (fulfilled == len(currturn)):
-                getnextturn()
-                if (len(currturn) == 0):
-                    print("you did it")
-
-        for num,x,y in currturn:
-            center = (int(x*w),int(y*h))
-            cv2.circle(frame, center=center, radius=10, color=pointcolor, thickness=3)
-            cx, cy = int(x * w), int(y * h)
-            cv2.putText(frame, str(int(num)), (cx + 5, cy + 5), cv2.FONT_HERSHEY_SIMPLEX, 1, textcolor, 1, cv2.LINE_AA)
+                    if (currframes == 0 and i in (4,8,12,16,20,2,5,9,13,17,0)):
+                        f.write(f"{i} {cx/w} {cy/h}\n")
         
+        if (currframes == 0):
+            f.write('\n')
+            currframes = frames
+
+        currframes -= 1
+        cv2.putText(frame, str(currframes), (100, 300), cv2.FONT_HERSHEY_SIMPLEX, 5, textcolor, 1, cv2.LINE_AA)
+
         cv2.imshow(windowname, frame)
 
         key = cv2.waitKey(1) & 0xFF

@@ -61,7 +61,7 @@ for mappath in os.listdir("maps"):
         *turns, = map(preprocess,open(f"maps/{mappath}", "r").read().split("\n\n"))
         MAPS[mapname] = turns
 
-curmap = "test"
+curmap = "aaaa"
 currturn = 0
 
 import pygame
