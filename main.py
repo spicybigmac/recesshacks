@@ -107,8 +107,19 @@ while running:
     
     screen.fill(palette[0])
 
-    left,middle,right = pygame.mouse.get_pressed()
-    mx,my = pygame.mouse.get_pos()
+    # left,middle,right = pygame.mouse.get_pressed()
+    # mx,my = pygame.mouse.get_pos()
+
+    left = True
+    fingertips = []
+    if results.multi_hand_landmarks:
+        handslist = [{},{},{}]
+        for hand,keypoints in enumerate(results.multi_hand_landmarks):
+            for i, landmark in enumerate(keypoints.landmark):
+                if i in [4,8,12,16,20]:
+                    cx, cy = int(landmark.x * w), int(landmark.y * h)
+                    fingertips.append((cx,cy))
+
     keys = pygame.key.get_pressed()
 
     if SCENE == "menu":
@@ -126,10 +137,10 @@ while running:
         pygame.draw.rect(screen,palette[4],rect2,10)
 
         if left:
-            if ihateyou(mx,my,rect):
+            if fingertips and all(ihateyou(cx,cy,rect) for cx,cy in fingertips):
                 SCENE = "mapselector"
                 loadmaps()
-            elif ihateyou(mx,my,rect2):
+            elif fingertips and all(ihateyou(cx,cy,rect2) for cx,cy in fingertips):
                 name = tkinter.filedialog.asksaveasfilename(defaultextension=".sys", filetypes=[("SYS files", "*.sys"), ("All files", "*.*")])
             
                 if name:
@@ -137,29 +148,29 @@ while running:
                     file.truncate(0)
                     SCENE = "mapcreator"
 
-
     elif SCENE == "mapselector":
         y = 10
+        ystep = 100
         mxw = 0
-        lnsz = fonts[32].get_linesize()
+        lnsz = fonts[50].get_linesize()
 
         for mapname in MAPS:
-            text = fonts[32].render(mapname,1,(255,255,255))
+            text = fonts[50].render(mapname,1,(255,255,255))
             screen.blit(text,(10,y))
-            y += lnsz
+            y += ystep
             mxw = max(text.get_width(),mxw)
 
-        if left:
-            if 10 <= mx <= 10+mxw:
-                y = 10
-                for mapname in MAPS:
-                    if y <= my <= y+lnsz:
-                        curmap = mapname
-                        currturn = 0
-                        SCENE = "map"
-                        break
+        y = 10
+        for mapname in MAPS:
+            rect = (10,y,mxw,lnsz)
 
-                    y += lnsz
+            if fingertips and all(ihateyou(cx,cy,rect) for cx,cy in fingertips):
+                curmap = mapname
+                currturn = 0
+                SCENE = "map"
+                break
+
+            y += ystep
 
         if keys[pygame.K_ESCAPE]:
             SCENE = "menu"
@@ -192,6 +203,7 @@ while running:
 
     elif SCENE == "map":
         instruction, requirements = MAPS[curmap][currturn]
+        pruned = [(x,y,z,w) for x,y,z,w in requirements if int(y) in [4,8,12,16,20,2,5,9,13,17,0]]
 
         if results.multi_hand_landmarks:
             fulfilled = 0
@@ -199,12 +211,12 @@ while running:
                 for i, landmark in enumerate(keypoints.landmark):
                     cx, cy = int(landmark.x * w), int(landmark.y * h)
 
-                for hand,a,xpos,ypos in requirements:
+                for hand,a,xpos,ypos in pruned:
                     a = int(a)
                     if (abs(keypoints.landmark[a].x-xpos)*w <= distance and abs(keypoints.landmark[a].y-ypos)*h <= distance):
                         fulfilled += 1
             
-            if fulfilled == len(requirements):
+            if fulfilled == len(pruned):
                 currturn += 1
                 if currturn == len(MAPS[curmap]):
                     SCENE = "menu"
