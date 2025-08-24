@@ -43,7 +43,7 @@ handcolors = [
 ]
 pointcolor = (0,255,0)
 textcolor = (0,0,0)
-linecolor = (100,2,54)
+linecolor = (0,255,0)
 distance = 60
 
 # LOADING MAP
@@ -130,10 +130,13 @@ while running:
                 SCENE = "mapselector"
                 loadmaps()
             elif ihateyou(mx,my,rect2):
-                SCENE = "mapcreator"
-                name = tkinter.filedialog.asksaveasfilename()
-                file = open(name,"w")
-                file.truncate(0)
+                name = tkinter.filedialog.asksaveasfilename(defaultextension=".sys", filetypes=[("SYS files", "*.sys"), ("All files", "*.*")])
+            
+                if name:
+                    file = open(name,"w")
+                    file.truncate(0)
+                    SCENE = "mapcreator"
+
 
     elif SCENE == "mapselector":
         y = 10
@@ -158,17 +161,22 @@ while running:
 
                     y += lnsz
 
-    elif SCENE == "mapcreator":
-        if currframes == 0 and results.multi_hand_landmarks:
-            file.write("-\n")
+        if keys[pygame.K_ESCAPE]:
+            SCENE = "menu"
 
-            for j,keypoints in enumerate(results.multi_hand_landmarks):
-                for i, landmark in enumerate(keypoints.landmark):
-                    cx, cy = int(landmark.x * w), int(landmark.y * h)                
-                    if (currframes == 0):
-                        file.write(f"{j} {i} {cx/w} {cy/h}\n")
-            
-            file.write('\n')
+    elif SCENE == "mapcreator":
+        if currframes == 0:
+            if results.multi_hand_landmarks:
+                file.write("-\n")
+
+                for j,keypoints in enumerate(results.multi_hand_landmarks):
+                    for i, landmark in enumerate(keypoints.landmark):
+                        cx, cy = int(landmark.x * w), int(landmark.y * h)                
+                        if (currframes == 0):
+                            file.write(f"{j} {i} {cx/w} {cy/h}\n")
+                
+                file.write('\n')
+
             currframes = frames
 
         currframes -= 1
@@ -178,7 +186,7 @@ while running:
         
         screen.blit(surf,(WIDTH/2-surf.get_width()/2,0))
 
-        if keys[pygame.K_q]:
+        if keys[pygame.K_ESCAPE]:
             file.close()
             SCENE = "menu"
 
@@ -220,6 +228,9 @@ while running:
         surf = pygame.image.frombuffer(frame.tostring(), frame.shape[1::-1],"BGR")
         
         screen.blit(surf,(WIDTH/2-surf.get_width()/2,0))
+
+        if keys[pygame.K_ESCAPE]:
+            SCENE = "menu"
 
     if results.multi_hand_landmarks:
         handslist = [{},{},{}]
