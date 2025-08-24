@@ -51,16 +51,16 @@ while True:
             f.write("-\n")
 
         if results.multi_hand_landmarks:
-            for i,keypoints in enumerate(results.multi_hand_landmarks):
+            for j,keypoints in enumerate(results.multi_hand_landmarks):
                 mpdrawing.draw_landmarks(frame, keypoints, mphands.HAND_CONNECTIONS,
-                                         mpdrawing.DrawingSpec(color=handcolors[i][0], thickness=1, circle_radius=5),
-                                         mpdrawing.DrawingSpec(color=handcolors[i][1], thickness=2, circle_radius=2))
+                                         mpdrawing.DrawingSpec(color=handcolors[j][0], thickness=1, circle_radius=5),
+                                         mpdrawing.DrawingSpec(color=handcolors[j][1], thickness=2, circle_radius=2))
                 for i, landmark in enumerate(keypoints.landmark):
                     cx, cy = int(landmark.x * w), int(landmark.y * h)
                     cv2.putText(frame, str(i), (cx + 5, cy + 5), cv2.FONT_HERSHEY_SIMPLEX, 1, textcolor, 1, cv2.LINE_AA)
                 
-                    if (currframes == 0 and i in (4,8,12,16,20,2,5,9,13,17,0)):
-                        f.write(f"{i} {cx/w} {cy/h}\n")
+                    if (currframes == 0):
+                        f.write(f"{j} {i} {cx/w} {cy/h}\n")
         
         if (currframes == 0):
             f.write('\n')

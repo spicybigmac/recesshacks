@@ -29,6 +29,8 @@ cap.set(cv2.CAP_PROP_FRAME_HEIGHT, HEIGHT)
 w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
 h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
+edges = [(0,1),(0,5),(0,17),(1,2),(2,3),(3,4),(5,9),(5,6),(6,7),(7,8),(9,13),(9,10),(10,11),(11,12),(13,17),(13,14),(14,15),(15,16),(17,18),(18,19),(19,20)]
+
 # ------ VARIABLES FOR CUSTOMIZATION -------
 windowname = "finger"
 # everythings in BGR btw not RGB
@@ -40,6 +42,7 @@ handcolors = [
 ]
 pointcolor = (0,255,0)
 textcolor = (0,0,0)
+linecolor = (100,2,54)
 distance = 60
 
 # LOADING MAP
@@ -134,7 +137,7 @@ while running:
                     cx, cy = int(landmark.x * w), int(landmark.y * h)
                     cv2.putText(frame, str(i), (cx + 5, cy + 5), cv2.FONT_HERSHEY_SIMPLEX, 1, textcolor, 1, cv2.LINE_AA)
 
-                for a,xpos,ypos in requirements:
+                for hand,a,xpos,ypos in requirements:
                     a = int(a)
                     if (abs(keypoints.landmark[a].x-xpos)*w <= distance and abs(keypoints.landmark[a].y-ypos)*h <= distance):
                         fulfilled += 1
@@ -144,11 +147,19 @@ while running:
                 if currturn == len(MAPS[curmap]):
                     SCENE = "menu"
 
-        for num,x,y in requirements:
+        handslist = [{},{},{}]
+        for hand,num,x,y in requirements:
             center = (int(x*w),int(y*h))
-            cv2.circle(frame, center=center, radius=10, color=pointcolor, thickness=3)
+            cv2.circle(frame, center=center, radius=5, color=pointcolor, thickness=2)
             cx, cy = int(x * w), int(y * h)
-            cv2.putText(frame, str(int(num)), (cx + 5, cy + 5), cv2.FONT_HERSHEY_SIMPLEX, 1, textcolor, 1, cv2.LINE_AA)
+            # cv2.putText(frame, str(int(num)), (cx + 5, cy + 5), cv2.FONT_HERSHEY_SIMPLEX, 1, textcolor, 1, cv2.LINE_AA)
+
+            handslist[int(hand)][num] = (int(x*w),int(y*h))
+        for hand in handslist:
+            for a,b in edges:
+                if (a not in hand or b not in hand): continue
+                cv2.line(frame, hand[a], hand[b], linecolor, 2)
+
 
         cv2.putText(frame,instruction,(10,h-10), cv2.FONT_HERSHEY_SIMPLEX, 1, textcolor, 1, cv2.LINE_AA)
 
