@@ -2,6 +2,7 @@ import cv2
 import mediapipe as mp
 import sys
 import os
+import tkinter.filedialog
 
 # ai init
 mphands = mp.solutions.hands
@@ -57,20 +58,21 @@ def preprocess(turn):
 
     return instruction,requirements
 
-for mappath in os.listdir("maps"):
-    mapname, extension = os.path.splitext(mappath)
+def loadmaps():
+    for mappath in os.listdir("maps"):
+        mapname, extension = os.path.splitext(mappath)
 
-    if extension == ".sys":
-        *turns, = map(preprocess,open(f"maps/{mappath}", "r").read().split("\n\n"))
-        MAPS[mapname] = turns
+        if extension == ".sys":
+            *turns, = map(preprocess,open(f"maps/{mappath}", "r").read().split("\n\n"))
+            MAPS[mapname] = turns
 
-curmap = "aaaa"
+curmap = ""
 currturn = 0
 
 import pygame
 pygame.init()
 
-font = pygame.font.SysFont("Verdana",32)
+fonts = [pygame.font.Font("pixelmix.ttf",x) for x in range(101)]
 
 screen = pygame.display.set_mode((WIDTH,HEIGHT))
 pygame.display.set_caption(windowname)
@@ -78,30 +80,73 @@ clock = pygame.time.Clock()
 
 SCENE = "menu"
 
+palette = [(0,0,0),(255,0,0),(0,255,0),(0,0,255),(255,255,255)]
+
+def ihateyou(x,y,rect):
+    return rect[0] <= x <= rect[0]+rect[2] and rect[1] <= y <= rect[1]+rect[3]
+
+frames = 100
+currframes = frames
+
 running = True
 while running:
+    success, frame = cap.read()
+    if not success:
+        break
+
+    # mirror cuz non mirror is freaky
+    frame = cv2.flip(frame,1)
+    # ai processing
+    rgbframe = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    results = hands.process(rgbframe)
+
     dt = clock.tick(120)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
     
-    screen.fill((0,0,0))
+    screen.fill(palette[0])
+
+    left,middle,right = pygame.mouse.get_pressed()
+    mx,my = pygame.mouse.get_pos()
+    keys = pygame.key.get_pressed()
 
     if SCENE == "menu":
+        title = fonts[50].render("NAME OF OUR PRODUCT!!!", 1, palette[4])
+        screen.blit(title,(WIDTH/2-title.get_width()/2,50))
+
+        play = fonts[50].render("Play", 1, palette[4])
+        rect = screen.blit(play,(WIDTH/2-play.get_width()/2-200,HEIGHT/2))
+        rect = (rect[0]+rect[2]/2-150,rect[1]+rect[3]/2-50,300,100)
+        pygame.draw.rect(screen,palette[4],rect,10)
+
+        create = fonts[50].render("Create", 1, palette[4])
+        rect2 = screen.blit(create,(WIDTH/2-create.get_width()/2+200,HEIGHT/2))
+        rect2 = (rect2[0]+rect2[2]/2-150,rect2[1]+rect2[3]/2-50,300,100)
+        pygame.draw.rect(screen,palette[4],rect2,10)
+
+        if left:
+            if ihateyou(mx,my,rect):
+                SCENE = "mapselector"
+                loadmaps()
+            elif ihateyou(mx,my,rect2):
+                SCENE = "mapcreator"
+                name = tkinter.filedialog.asksaveasfilename()
+                file = open(name,"w")
+                file.truncate(0)
+
+    elif SCENE == "mapselector":
         y = 10
         mxw = 0
-        lnsz = font.get_linesize()
+        lnsz = fonts[32].get_linesize()
 
         for mapname in MAPS:
-            text = font.render(mapname,1,(255,255,255))
+            text = fonts[32].render(mapname,1,(255,255,255))
             screen.blit(text,(10,y))
             y += lnsz
             mxw = max(text.get_width(),mxw)
 
-        left,middle,right = pygame.mouse.get_pressed()
-
         if left:
-            mx,my = pygame.mouse.get_pos()
             if 10 <= mx <= 10+mxw:
                 y = 10
                 for mapname in MAPS:
@@ -113,29 +158,38 @@ while running:
 
                     y += lnsz
 
+    elif SCENE == "mapcreator":
+        if currframes == 0 and results.multi_hand_landmarks:
+            file.write("-\n")
+
+            for j,keypoints in enumerate(results.multi_hand_landmarks):
+                for i, landmark in enumerate(keypoints.landmark):
+                    cx, cy = int(landmark.x * w), int(landmark.y * h)                
+                    if (currframes == 0):
+                        file.write(f"{j} {i} {cx/w} {cy/h}\n")
+            
+            file.write('\n')
+            currframes = frames
+
+        currframes -= 1
+        cv2.putText(frame, str(currframes), (100, 300), cv2.FONT_HERSHEY_SIMPLEX, 5, textcolor, 1, cv2.LINE_AA)
+
+        surf = pygame.image.frombuffer(frame.tostring(), frame.shape[1::-1],"BGR")
+        
+        screen.blit(surf,(WIDTH/2-surf.get_width()/2,0))
+
+        if keys[pygame.K_q]:
+            file.close()
+            SCENE = "menu"
+
     elif SCENE == "map":
-        success, frame = cap.read()
-        if not success:
-            break
-
-        # mirror cuz non mirror is freaky
-        frame = cv2.flip(frame,1)
-        # ai processing
-        rgbframe = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-        results = hands.process(rgbframe)
-
         instruction, requirements = MAPS[curmap][currturn]
 
         if results.multi_hand_landmarks:
             fulfilled = 0
             for i,keypoints in enumerate(results.multi_hand_landmarks):
-                mpdrawing.draw_landmarks(frame, keypoints, mphands.HAND_CONNECTIONS,
-                                            mpdrawing.DrawingSpec(color=handcolors[i][0], thickness=1, circle_radius=5),
-                                            mpdrawing.DrawingSpec(color=handcolors[i][1], thickness=2, circle_radius=2))
-                
                 for i, landmark in enumerate(keypoints.landmark):
                     cx, cy = int(landmark.x * w), int(landmark.y * h)
-                    cv2.putText(frame, str(i), (cx + 5, cy + 5), cv2.FONT_HERSHEY_SIMPLEX, 1, textcolor, 1, cv2.LINE_AA)
 
                 for hand,a,xpos,ypos in requirements:
                     a = int(a)
@@ -166,6 +220,18 @@ while running:
         surf = pygame.image.frombuffer(frame.tostring(), frame.shape[1::-1],"BGR")
         
         screen.blit(surf,(WIDTH/2-surf.get_width()/2,0))
+
+    if results.multi_hand_landmarks:
+        handslist = [{},{},{}]
+        for hand,keypoints in enumerate(results.multi_hand_landmarks):
+            for i, landmark in enumerate(keypoints.landmark):
+                cx, cy = int(landmark.x * w), int(landmark.y * h)
+                handslist[hand][i] = (cx,cy)
+
+        for hand in handslist:
+            for a,b in edges:
+                if (a not in hand or b not in hand): continue
+                pygame.draw.line(screen,palette[1],hand[a],hand[b],10)
 
     pygame.display.flip()
 
