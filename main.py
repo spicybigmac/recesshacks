@@ -236,7 +236,7 @@ while running:
 
     if SCENE != "menu":
         play = fonts[30].render("Back", 1, palette[4])
-        rect = screen.blit(play,(WIDTH-play.get_width()-50,HEIGHT-play.get_height()-20))
+        rect = screen.blit(play,(WIDTH-play.get_width()-60,HEIGHT-play.get_height()-30))
         rect = (rect[0]+rect[2]/2-100,rect[1]+rect[3]/2-40,200,80)
         pygame.draw.rect(screen,palette[4],rect,10)
 
