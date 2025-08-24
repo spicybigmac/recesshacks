@@ -133,16 +133,25 @@ while running:
             for fingertips in fingertipslists:
                 for cx,cy in fingertips:
                     d2 = (cx-point[0])**2 + (cy-point[1])**2
-                    point[2] -= 40*(cx - point[0]) / d2
-                    point[3] -= 40*(cy - point[1]) / d2
+                    if d2 > 0:
+                        point[2] -= 40*(cx - point[0]) / d2
+                        point[3] -= 40*(cy - point[1]) / d2
+
+            for j in range(4,len(pointsbruh)):
+                cx,cy = pointsbruh[j][0],pointsbruh[j][1]
+                d2 = (cx-point[0])**2 + (cy-point[1])**2
+                if d2 > 0:
+                    point[2] -= 10*(cx - point[0]) / d2
+                    point[3] -= 10*(cy - point[1]) / d2
 
             cx,cy = WIDTH/2, HEIGHT/2
             d2 = (cx-point[0])**2 + (cy-point[1])**2
-            point[2] += 50*(cx - point[0]) / d2
-            point[3] += 50*(cy - point[1]) / d2
+            if d2 > 0:
+                point[2] += 50*(cx - point[0]) / d2
+                point[3] += 50*(cy - point[1]) / d2
 
-            point[2] -= 50*(cy - point[1]) / d2
-            point[3] += 50*(cx - point[0]) / d2
+                point[2] -= 50*(cy - point[1]) / d2
+                point[3] += 50*(cx - point[0]) / d2
 
             point[2] *= 0.98
             point[3] *= 0.98
