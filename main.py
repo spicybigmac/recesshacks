@@ -46,6 +46,11 @@ textcolor = (0,0,0)
 linecolor = (0,255,0)
 distance = 60
 
+pointsbruh = [(0,0,0,0),(WIDTH,0,0,0),(0,HEIGHT,0,0),(WIDTH,HEIGHT,0,0)]
+import random
+for i in range(10):
+    pointsbruh.append([random.randint(0,WIDTH),random.randint(0,HEIGHT),random.uniform(-1,1),random.uniform(-1,1)])
+
 # LOADING MAP
 MAPS = {}
 
@@ -110,7 +115,6 @@ while running:
     # left,middle,right = pygame.mouse.get_pressed()
     # mx,my = pygame.mouse.get_pos()
 
-    left = True
     fingertips = []
     if results.multi_hand_landmarks:
         handslist = [{},{},{}]
@@ -123,6 +127,73 @@ while running:
     keys = pygame.key.get_pressed()
 
     if SCENE == "menu":
+        for i in range(4,len(pointsbruh)):
+            point = pointsbruh[i]
+
+            for cx,cy in fingertips:
+                d2 = (cx-point[0])**2 + (cy-point[1])**2
+                point[2] -= 40*(cx - point[0]) / d2
+                point[3] -= 40*(cy - point[1]) / d2
+
+            cx,cy = WIDTH/2, HEIGHT/2
+            d2 = (cx-point[0])**2 + (cy-point[1])**2
+            point[2] += 50*(cx - point[0]) / d2
+            point[3] += 50*(cy - point[1]) / d2
+
+            point[2] -= 50*(cy - point[1]) / d2
+            point[3] += 50*(cx - point[0]) / d2
+
+            point[2] *= 0.98
+            point[3] *= 0.98
+
+            if point[0] < 0:
+                point[2] = abs(point[2])
+            elif point[0] > WIDTH:
+                point[2] = -abs(point[2])
+
+            if point[1] < 0:
+                point[3] = abs(point[3])
+            elif point[1] > HEIGHT:
+                point[3] = -abs(point[3])
+
+            point[0] += point[2]
+            point[1] += point[3]
+            pygame.draw.circle(screen,(0,0,127),(point[0],point[1]),5)
+
+        for i in range(len(pointsbruh)):
+            for j in range(i+1,len(pointsbruh)):
+                for k in range(j+1,len(pointsbruh)):
+                    a = pointsbruh[i]
+                    b = pointsbruh[j]
+                    c = pointsbruh[k]
+
+                    ax,ay,_,_ = a
+                    bx,by,_,_ = b
+                    cx,cy,_,_ = c
+
+                    if (bx - ax)*(cy - ay)-(cx - ax)*(by - ay) < 0:
+                        b,c = c,b
+                        bx,by,cx,cy = cx,cy,bx,by
+
+                    for l in range(len(pointsbruh)):
+                        if l in [i,j,k]: continue
+
+                        d = pointsbruh[l]
+                        dx,dy,_,_ = d
+
+                        ax_ = ax-dx
+                        ay_ = ay-dy
+                        bx_ = bx-dx
+                        by_ = by-dy
+                        cx_ = cx-dx
+                        cy_ = cy-dy
+                        if ((ax_*ax_ + ay_*ay_) * (bx_*cy_-cx_*by_) -
+                            (bx_*bx_ + by_*by_) * (ax_*cy_-cx_*ay_) +
+                            (cx_*cx_ + cy_*cy_) * (ax_*by_-bx_*ay_)) > 0:
+                            break
+                    else:
+                        pygame.draw.lines(screen,(0,0,127),1,[(ax,ay),(bx,by),(cx,cy)],2)
+                        
         title = fonts[50].render("NAME OF OUR PRODUCT!!!", 1, palette[4])
         screen.blit(title,(WIDTH/2-title.get_width()/2,50))
 
@@ -136,17 +207,16 @@ while running:
         rect2 = (rect2[0]+rect2[2]/2-150,rect2[1]+rect2[3]/2-50,300,100)
         pygame.draw.rect(screen,palette[4],rect2,10)
 
-        if left:
-            if fingertips and all(ihateyou(cx,cy,rect) for cx,cy in fingertips):
-                SCENE = "mapselector"
-                loadmaps()
-            elif fingertips and all(ihateyou(cx,cy,rect2) for cx,cy in fingertips):
-                name = tkinter.filedialog.asksaveasfilename(defaultextension=".sys", filetypes=[("SYS files", "*.sys"), ("All files", "*.*")])
-            
-                if name:
-                    file = open(name,"w")
-                    file.truncate(0)
-                    SCENE = "mapcreator"
+        if fingertips and all(ihateyou(cx,cy,rect) for cx,cy in fingertips):
+            SCENE = "mapselector"
+            loadmaps()
+        elif fingertips and all(ihateyou(cx,cy,rect2) for cx,cy in fingertips):
+            name = tkinter.filedialog.asksaveasfilename(defaultextension=".sys", filetypes=[("SYS files", "*.sys"), ("All files", "*.*")])
+        
+            if name:
+                file = open(name,"w")
+                file.truncate(0)
+                SCENE = "mapcreator"
 
     elif SCENE == "mapselector":
         y = 10
