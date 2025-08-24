@@ -1,5 +1,6 @@
 import cv2
 import mediapipe as mp
+import sys
 
 # ai init
 mphands = mp.solutions.hands
@@ -9,7 +10,10 @@ hands = mphands.Hands(max_num_hands=2)
 print("done loading ai")
 
 # webcam stuff
-cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+if (sys.platform == "darwin" or sys.platform == "linux"):
+    cap = cv2.VideoCapture(0)
+elif (sys.platform == "win32"):
+    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
 if not cap.isOpened():
     print("bad")
     exit()
