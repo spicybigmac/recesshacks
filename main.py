@@ -44,7 +44,7 @@ handcolors = [
 pointcolor = (0,255,0)
 textcolor = (0,0,0)
 linecolor = (0,255,0)
-distance = 60
+distance = 50
 
 pointsbruh = [(0,0,0,0),(WIDTH,0,0,0),(0,HEIGHT,0,0),(WIDTH,HEIGHT,0,0)]
 import random
@@ -279,17 +279,14 @@ while running:
         pruned = [(x,y,z,w) for x,y,z,w in requirements if int(y) in [4,8,12,16,20,2,5,9,13,17,0]]
 
         if results.multi_hand_landmarks:
-            fulfilled = 0
-            for i,keypoints in enumerate(results.multi_hand_landmarks):
-                for i, landmark in enumerate(keypoints.landmark):
-                    cx, cy = int(landmark.x * w), int(landmark.y * h)
-
-                for hand,a,xpos,ypos in pruned:
+            fulfilled = [0 for _ in range(len(pruned))]
+            for keypoints in results.multi_hand_landmarks:
+                for i,(hand,a,xpos,ypos) in enumerate(pruned):
                     a = int(a)
                     if (abs(keypoints.landmark[a].x-xpos)*w <= distance and abs(keypoints.landmark[a].y-ypos)*h <= distance):
-                        fulfilled += 1
-            
-            if fulfilled == len(pruned):
+                        fulfilled[i] = 1
+
+            if sum(fulfilled) == len(pruned):
                 currturn += 1
                 if currturn == len(MAPS[curmap]):
                     SCENE = "menu"

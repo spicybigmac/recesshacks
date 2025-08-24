@@ -31,11 +31,11 @@ handcolors = [
 ]
 pointcolor = (0,255,0)
 textcolor = (0,0,0)
-frames = 20
+frames = 50
 currframes = frames
 
 # LOADING MAP
-mapname = "aaaa"
+mapname = "cutting2"
 f = open(f"maps/{mapname}.sys", "w")
 
 while True:
