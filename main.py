@@ -115,14 +115,14 @@ while running:
     # left,middle,right = pygame.mouse.get_pressed()
     # mx,my = pygame.mouse.get_pos()
 
-    fingertips = []
+    fingertipslists = [[],[],[]]
     if results.multi_hand_landmarks:
         handslist = [{},{},{}]
         for hand,keypoints in enumerate(results.multi_hand_landmarks):
             for i, landmark in enumerate(keypoints.landmark):
                 if i in [4,8,12,16,20]:
                     cx, cy = int(landmark.x * w), int(landmark.y * h)
-                    fingertips.append((cx,cy))
+                    fingertipslists[hand].append((cx,cy))
 
     keys = pygame.key.get_pressed()
 
@@ -130,10 +130,11 @@ while running:
         for i in range(4,len(pointsbruh)):
             point = pointsbruh[i]
 
-            for cx,cy in fingertips:
-                d2 = (cx-point[0])**2 + (cy-point[1])**2
-                point[2] -= 40*(cx - point[0]) / d2
-                point[3] -= 40*(cy - point[1]) / d2
+            for fingertips in fingertipslists:
+                for cx,cy in fingertips:
+                    d2 = (cx-point[0])**2 + (cy-point[1])**2
+                    point[2] -= 40*(cx - point[0]) / d2
+                    point[3] -= 40*(cy - point[1]) / d2
 
             cx,cy = WIDTH/2, HEIGHT/2
             d2 = (cx-point[0])**2 + (cy-point[1])**2
@@ -207,10 +208,10 @@ while running:
         rect2 = (rect2[0]+rect2[2]/2-150,rect2[1]+rect2[3]/2-50,300,100)
         pygame.draw.rect(screen,palette[4],rect2,10)
 
-        if fingertips and all(ihateyou(cx,cy,rect) for cx,cy in fingertips):
+        if any(fingertips and all(ihateyou(cx,cy,rect) for cx,cy in fingertips) for fingertips in fingertipslists):
             SCENE = "mapselector"
             loadmaps()
-        elif fingertips and all(ihateyou(cx,cy,rect2) for cx,cy in fingertips):
+        elif any(fingertips and all(ihateyou(cx,cy,rect2) for cx,cy in fingertips) for fingertips in fingertipslists):
             name = tkinter.filedialog.asksaveasfilename(defaultextension=".sys", filetypes=[("SYS files", "*.sys"), ("All files", "*.*")])
         
             if name:
@@ -234,7 +235,7 @@ while running:
         for mapname in MAPS:
             rect = (10,y,mxw,lnsz)
 
-            if fingertips and all(ihateyou(cx,cy,rect) for cx,cy in fingertips):
+            if any(fingertips and all(ihateyou(cx,cy,rect) for cx,cy in fingertips) for fingertips in fingertipslists):
                 curmap = mapname
                 currturn = 0
                 SCENE = "map"
@@ -310,7 +311,7 @@ while running:
         rect = (rect[0]+rect[2]/2-100,rect[1]+rect[3]/2-40,200,80)
         pygame.draw.rect(screen,palette[4],rect,10)
 
-        if fingertips and all(ihateyou(cx,cy,rect) for cx,cy in fingertips):
+        if any(fingertips and all(ihateyou(cx,cy,rect) for cx,cy in fingertips) for fingertips in fingertipslists):
             if SCENE == "mapcreator":
                 file.close()
 
